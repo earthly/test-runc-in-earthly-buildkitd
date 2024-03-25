@@ -1,0 +1,43 @@
+## How this was initially created
+
+### amd64 version
+
+I ran the following commands on an amd64 host
+
+runc spec
+mkdir rootfs
+docker run --name container-to-export -d alpine sleep 99999
+docker export container-to-export | tar x -C rootfs
+docker rm -f container-to-export
+
+# edit config.json and change:
+# 1. process.args from ["sh"] to ["sh", "-c", "echo hello && hostname"]
+# 2. terminal to false
+# 3. remove XTERM from env
+
+## Running the test
+
+docker build -tag testrunc .
+docker run --rm --privileged testrunc
+
+### arm64
+
+The same steps above were run, except with a `docker run --platform linux/arm64` was used to
+both create the rootfs and during the build and run commands of the test. This was done on a amd64-based host
+with qemu, for example:
+
+runc spec
+mkdir rootfs
+docker run --name container-to-export -d --platform linux/arm64 alpine sleep 99999
+docker export container-to-export | tar x -C rootfs
+docker rm -f container-to-export
+
+# edit config.json and change:
+# 1. process.args from ["sh"] to ["sh", "-c", "echo hello && hostname"]
+# 2. terminal to false
+# 3. remove XTERM from env
+
+## Running the test
+
+docker build --platform linux/arm64 -tag testrunc .
+docker run --rm --privileged --platform linux/arm64 testrunc
